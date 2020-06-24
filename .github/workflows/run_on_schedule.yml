@@ -2,7 +2,7 @@ name: run_on_schedule
 
 on:
   schedule:
-    - cron: '* 7-19/30 * * *'
+    - cron: '/30 7-19 * * *'
 
 jobs:
   ufs_fms_ci:
