@@ -1,0 +1,32 @@
+name: run_on_schedule
+
+on:
+  schedule:
+    - cron: '* 7-19/30 * * *'
+
+jobs:
+  ufs_fms_ci:
+    runs-on:  ubuntu-latest
+    steps: 
+      - name: checkout 
+        uses: actions/checkout@v2
+
+      - name: cache ncep hashfile
+        uses: actions/cache@v2
+        with:
+          path: hashfiles
+          key: hashfile-${{GITHUB.RUN_ID}}
+          restore-keys: hashfile-
+
+      - name: mkdir hashfiles if it doens't exist
+        run: mkdir -p hashfiles
+
+      - name: update images and rebuild
+        run: ./check.sh ${{secrets.DOCKER_USERNAME}} ${{secrets.DOCKER_PASSWORD}}
+
+      - name: stores as artifact also
+        uses: actions/upload-artifact@v1
+        with:
+          name: logfile
+          path: LOG
+               
