@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 
 #: relevant files 
 ncep_hashfile=$PWD/"hashfiles/hashfile_ncep"
@@ -9,7 +10,7 @@ logfile=$PWD/LOG
 
 
 #: ncep external library version
-external_v='v1.0.0'
+external_v='ufs-v1.0.0'
 
 
 #: repositories
@@ -40,6 +41,10 @@ fms_override='false'
 ncep_cleanhashfile='false'
 ufs_cleanhashfile='false'
 fms_cleanhashfile='false'
+
+
+#: number of hashes to check
+fms_nhash=$3
 
 
 #: make hashfiles if they don't exist
@@ -117,7 +122,8 @@ if [ $ncep_build == 'true' ] ; then
 
     echo "**************************"
     echo "BUILDING NCEPLIBS:$curr_ncep DOCKER IMAGE"
-
+    echo "**************************"
+    
     docker pull mklee03/nceplibs:$curr_ncep
     if [ $? -eq 0 ] ; then        
         echo "NCEP $curr_ncep image exists"
@@ -129,18 +135,18 @@ if [ $ncep_build == 'true' ] ; then
         git clone --recursive --branch $ncep_branch $ncep_upstream
         cd NCEPLIBS && git checkout $curr_ncep
         docker pull mklee03/external_libs:$external_v
+
+        sed -i "s/CHANGEME/$external_v/" ../NCEP_Dockerfile
         docker build -f ../NCEP_Dockerfile -t nceplibs:$curr_ncep  .
         
         if [ $? -ne 0 ] ; then
             echo -e "FAILED $curr_ncep `date`\n $(cat $ncep_hashfile)" > $ncep_hashfile
-            echo -e "\n\n\n\n\n"
             echo "***********************************"
             echo "NCEP FAILED NCEP FAILED NCEP FAILED"
             echo "***********************************"
             cat $logfile
             echo "(FAILED) COMMIT MESSAGE" 
             git show -s $curr_ncep
-            echo -e "\n\n\n\n\n"
             exit $?
         else
             echo -e "PASSED $curr_ncep `date`\n $(cat $ncep_hashfile)" > $ncep_hashfile
@@ -162,6 +168,7 @@ if [ $ufs_build == 'true' ] ; then
 
     echo "**************************"
     echo "COMPILING UFS $curr_ufs"
+    echo "**************************"
 
     if [ $ncep_dockerpulled == 'false' ] ; then
         docker pull mklee03/nceplibs:$curr_ncep
@@ -175,14 +182,12 @@ if [ $ufs_build == 'true' ] ; then
 
     if [ $? -ne 0 ] ; then
         echo -e "FAILED $curr_ufs `date`\n $(cat $ufs_hashfile)" > $ufs_hashfile
-        echo -e "\n\n\n\n\n"
         echo "***********************************"
         echo "UFS FAILED UFS FAILED UFS FAILED"
         echo "***********************************"
         cat $logfile
         echo "(FAILED) COMMIT MESSAGE"
         git show -s $curr_ufs
-        echo -e "\n\n\n\n\n"
         exit $?
     else
         echo -e "PASSED $curr_ufs `date`\n $(cat $ufs_hashfile)" > $ufs_hashfile
@@ -191,7 +196,7 @@ if [ $ufs_build == 'true' ] ; then
         echo "***********************" >> $logfile
     fi
 
-    $fms_build == 'true'
+    $fms_build = 'true'
     
 fi
 
@@ -199,40 +204,59 @@ fi
 if [ $fms_build == 'true' ] ; then
 
     echo "**************************"
-    echo "BUILDING FMS $curr_fms"
+    echo "COMPILING FMS"
+    echo "**************************"
 
+    #: get UFS if it hasn't been cloned already
     if [ $ufs_build == 'false' ] ; then
         git clone --recursive --branch $ufs_branch $ufs_upstream
         cd ufs-weather-model && git checkout $curr_ufs
         sed -i "s/CHANGEME/$curr_ncep/" ../UFS_Dockerfile
     fi
 
+    #: pull nceplib image if it hasn't been pulled already
     if [ $ncep_dockerpulled == 'false' ] ; then
         docker pull mklee03/nceplibs:$curr_ncep
         ncep_dockerpulled='true'
     fi    
-    
-    cd FMS && git checkout $fms_branch && git checkout $curr_fms && cd ..
-    docker build -f ../UFS_Dockerfile -t fms:$curr_fms .
 
-    if [ $? -ne 0 ] ; then
-        echo -e "FAILED $curr_fms `date`\n $(cat $fms_hashfile)" > $fms_hashfile
-        echo -e "\n\n\n\n\n"
-        echo "***********************************"
-        echo "FMS FAILED FMS FAILED FMS FAILED"
-        echo "***********************************"
-        cat $logfile
-        echo "(FAILED) COMMIT MESSAGE"
-        git show -s $curr_fms
-        echo -e "\n\n\n\n\n"
-        exit $?
-    else
-        echo -e "PASSED $curr_fms `date`\n $(cat $fms_hashfile)" > $fms_hashfile
-        echo "(PASSED) FMS COMMIT MESSAGE" >> $logfile
-        cd FMS
-        git show -s $curr_fms          >> $logfile
-        echo "***********************" >> $logfile
-    fi
+    #: get FMS latest commits
+    cd FMS && git checkout $fms_branch
+    git log --max-count=$fms_nhash --pretty=oneline > ../FMS_TMP
+    cd ..
+    
+    for (( ihash=1 ; ihash<=$fms_nhash ; ihash++ )) ; do
+
+        curr_fms=$( sed -n "${ihash}p" FMS_TMP | awk '{print $1}' )
+        echo "*********************************"
+        echo "$ihash $curr_fms"
+        echo "*********************************"
+        
+        cd FMS && git checkout $curr_fms && cd ..
+
+        if [ $( grep -c "PASSED $curr_fms" $fms_hashfile ) -eq 0 ] ; then
+            docker build -f ../UFS_Dockerfile -t fms:$curr_fms .
+            if [ $? -ne 0 ] ; then
+                echo -e "FAILED $curr_fms `date`\n $(cat $fms_hashfile)" > $fms_hashfile
+                echo "***********************************"
+                echo "FMS FAILED FMS FAILED FMS FAILED"
+                echo "***********************************"
+                cat $logfile
+                echo "(FAILED) COMMIT MESSAGE"
+                git show -s $curr_fms
+                exit $?
+            else
+                echo -e "PASSED $curr_fms `date`\n $(cat $fms_hashfile)" > $fms_hashfile
+                echo "(PASSED) FMS COMMIT MESSAGE" >> $logfile
+                cd FMS
+                git show -s $curr_fms          >> $logfile
+                echo "***********************" >> $logfile
+                cd ../
+            fi
+        fi
+
+    done
+
 fi
 
 
