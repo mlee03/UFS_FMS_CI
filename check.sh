@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 
 #: relevant files 
 ncep_hashfile=$PWD/"hashfiles/hashfile_ncep"
