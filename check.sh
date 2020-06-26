@@ -35,7 +35,7 @@ fms_build='true'
 #: force build
 ncep_override='false'
 ufs_override='false'
-fms_override='false'
+fms_override='true'
 
 
 #: restart hashfiles
