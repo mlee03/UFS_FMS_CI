@@ -234,7 +234,10 @@ if [ $fms_build == 'true' ] ; then
         
         cd FMS && git checkout $curr_fms && cd ..
 
-        if [ $( grep -c "PASSED $curr_fms" $fms_hashfile ) -eq 0 ] ; then
+	      ncount=$( grep -c "PASSED $curr_fms" $fms_hashfile )
+        [ $fms_build == 'true' ] && ncount=0
+
+        if [ $ncount -eq 0 ] ; then
             docker build -f ../UFS_Dockerfile -t fms:$curr_fms .
             if [ $? -ne 0 ] ; then
                 echo -e "FAILED $curr_fms `date`\n $(cat $fms_hashfile)" > $fms_hashfile
