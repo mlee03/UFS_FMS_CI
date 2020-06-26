@@ -1,12 +1,12 @@
-name: master_build
+name: build_ufs_release_publicv1
 
 on:
   push:
     branches:
-      - nobranch #master
+      - ufs/release/public-v1
   pull_request:
     branches:
-      - nobranch #master     
+      - ufs/release/public-v1
 
 jobs:
   ufs_fms_ci:

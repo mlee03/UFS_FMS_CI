@@ -2,6 +2,7 @@
 
 #set -x
 
+
 #: relevant files 
 ncep_hashfile=$PWD/"hashfiles/hashfile_ncep"
 ufs_hashfile=$PWD/"hashfiles/hashfile_ufs"
@@ -21,7 +22,7 @@ fms_upstream='https://github.com/NOAA-GFDL/FMS.git'
 
 #: branches
 ncep_branch="release/public-v1"  ; ncep_hashtag="refs/heads/$ncep_branch"
-ufs_branch="develop"             ; ufs_hashtag="refs/heads/$ufs_branch"
+ufs_branch="release/public-v1"   ; ufs_hashtag="refs/heads/$ufs_branch"
 fms_branch="master"              ; fms_hashtag='HEAD'
 
 
