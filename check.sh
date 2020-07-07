@@ -196,7 +196,7 @@ if [ $ufs_build == 'true' ] ; then
         echo "***********************" >> $logfile
     fi
 
-    $fms_build = 'true'
+    fms_build = 'true'
     
 fi
 
