@@ -10,6 +10,7 @@ work_id=$2
 if [ $whereami == 'start' ] ; then
     
     if [ -f $wfile ] ; then
+        cat $wfile
         job_status=$( awk '{print $2}' $wfile )
         if [ $job_status == 'RUNNING' ] ; then
             cat $wfile
@@ -22,6 +23,7 @@ if [ $whereami == 'start' ] ; then
         mkdir -p workflow_status
         echo " $work_id RUNNING `date` " > $wfile
     fi
+    cat $wfile
 
 elif [ $whereami == 'failed' ] ; then
 

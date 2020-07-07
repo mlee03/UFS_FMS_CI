@@ -21,9 +21,7 @@ jobs:
 
       - name: check if previous workflow is running
         run: |
-          cat workflow_status/workflow_status
           ./workflow.sh 'start' ${{GITHUB.RUN_ID}}
-          cat workflow_status/workflow_status
   
   ufs_fms_ci:
     runs-on:  ubuntu-latest
