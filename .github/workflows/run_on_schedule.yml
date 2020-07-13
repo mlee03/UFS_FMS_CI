@@ -2,7 +2,7 @@ name: run_on_schedule
 
 on:
   schedule:
-    - cron: '*/30 7-19 * * *'
+    - cron: '*/59 7-19 * * *'
 
 jobs:
 
