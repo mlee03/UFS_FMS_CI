@@ -1,0 +1,25 @@
+name: reset_workflow_status
+
+on:
+  push:
+    branches:
+      - master
+  
+jobs:
+
+  check_previous_run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout 
+        uses: actions/checkout@v2
+
+      - name: cache workflow_status file
+        uses: actions/cache@v2
+        with:
+          path: workflow_status
+          key:  workflow_status2-${{GITHUB.RUN_ID}}_0
+          restore-keys: workflow_status2-    
+
+      - name: check if previous workflow is running
+        run: ./reset_workflowfile.sh
+  
