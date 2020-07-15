@@ -2,7 +2,7 @@ name: run_on_schedule
 
 on:
   schedule:
-    - cron: '*/30 7-19 * * *'
+    - cron: '*/59 7-19 * * *'
 
 jobs:
 
@@ -16,8 +16,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: workflow_status
-          key:  workflow_status-${{GITHUB.RUN_ID}}_0
-          restore-keys: workflow_status-    
+          key:  workflow_status2-${{GITHUB.RUN_ID}}_0
+          restore-keys: workflow_status2-    
 
       - name: check if previous workflow is running
         run: |
@@ -41,14 +41,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: workflow_status
-          key:  workflow_status-${{GITHUB.RUN_ID}}_1
-          restore-keys: workflow_status-    
+          key:  workflow_status2-${{GITHUB.RUN_ID}}_1
+          restore-keys: workflow_status2-    
   
       - name: mkdir hashfiles if it doens't exist
         run: mkdir -p hashfiles
 
       - name: update images and rebuild
-        run: ./check.sh ${{secrets.DOCKER_USERNAME}} ${{secrets.DOCKER_PASSWORD}} 5
+        run: ./check.sh ${{secrets.DOCKER_USERNAME}} ${{secrets.DOCKER_PASSWORD}} 4
 
       - name: if fail edit workflow file
         if: ${{ failure() }}
@@ -71,8 +71,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: workflow_status
-          key:  workflow_status-${{GITHUB.RUN_ID}}_3
-          restore-keys: workflow_status-
+          key:  workflow_status2-${{GITHUB.RUN_ID}}_3
+          restore-keys: workflow_status2-
 
       - name: check if previous workflow is running
         run: ./workflow.sh 'end' ${{GITHUB.RUN_ID}}                
