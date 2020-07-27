@@ -1,0 +1,148 @@
+#!/bin/bash
+
+
+#: ./run_s2s.sh -h 
+#: TODO:  options for DISKNM to specify baseline results
+
+
+#: rt.sh variables
+workdir=/work/noaa/gfdlscr/$USER
+user=$USER
+queue="  QUEUE=windfall"
+compile_queue="  COMPILE_QUEUE=batch"
+accnr="  ACCNR=gfdlhires"
+stmp="  STMP=/work/noaa/gfdlscr/mlee03/stmp"
+ptmp="  PTMP=/work/noaa/gfdlscr/mlee03/stmp"
+disknm=''
+
+
+#: defaults
+ufs_model='https://github.com/ufs-community/ufs-weather-model.git'
+branch='develop'
+conf_file='rt_orion.conf'
+workdir=$workdir/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
+
+
+#: get user-defined arguments 
+while getopts "a:b:d:c:m:h" myopts ; do
+    case ${myopts} in 
+	a) ufs_model=${OPTARG}   ;;
+	b) branch=${OPTARG}      ;;
+	d) workdir=${OPTARG}     ;;
+	c) conf_file=${OPTARG}   ;;
+	m) log_message=${OPTARG} ;;
+	h)
+	    echo -e "\n USAGE"
+	    echo    " ./run_rts.sh -d directory -a repo_address -b branch -c conf_file -m message"
+	    echo    " -d directory:   user-specified work directory" 
+	    echo    " -a address:     UFS repo address to checkout from GitHub"
+	    echo    " -b branch:      branch to checkout from GitHub"
+	    echo    " -c conf_file:   rt.conf"
+	    echo -e " -m message:     Message to print in log \n"
+	    echo    " Will default to  "
+	    echo    "      REPO      $ufs_model"
+	    echo    "      BRANCH    $branch"
+	    echo    "      WORKDIR   $workdir"
+	    echo    "      RT.SH     $workdir/ufs-weather-model/tests/rt.sh"
+	    echo -e "      RT.CONF   $workdir/ufs-weather-model/tests/$conf_file\n"
+	    exit ;;
+    esac
+done
+
+
+#: LOG
+log=$workdir/LOG
+mkdir -p $workdir && cd $workdir
+echo "  work in progress in directory $workdir"
+echo "  LOG file generated in $workdir"
+
+
+#: LOG
+touch -a $log
+echo `env TZ=America/New_York date`  >> $log 
+echo ''                              >> $log
+echo    "UFS REPOSITORY  $ufs_model" >> $log
+echo    "UFS BRANCH      $branch"            >> $log
+echo -e "MESSAGE         $log_message\n"     >> $log
+
+
+#: clone UFS weather model
+echo "CLONING" >> $log
+echo "git clone --recursive --branch $branch $ufs_model" >> $log
+echo "*************************************"             >> $log
+(git clone --recursive --branch $branch $ufs_model)      >> $log 2>&1
+echo -e "*************************************\n"        >> $log
+
+
+#: change workdir
+workdir=$workdir/ufs-weather-model/tests
+cd $workdir
+
+
+#: check to see if the workflow script exists
+if [ -f $workdir/rt.sh ] ; then
+    workfile=$workdir/rt.sh
+    echo "rt.sh:   $workfile" >> $log
+else
+    echo "rt.sh:  CANNOT FIND rt.sh in $workdir.  GOODBYE!" >> $log
+    exit
+fi
+
+
+#: check to see if *.conf file exists 
+if [ -f $workdir/$conf_file ] ; then    
+    conf_file=$workdir/$conf_file
+    echo -e "rt.conf: $conf_file\n" >> $log
+else
+    echo "rt.conf:  CANNOT FIND $conf_file in $workdir.  GOODBYE!" >> $log
+    exit
+fi
+
+
+#: edit rt.sh
+cp $workfile $workfile.ORIGINAL
+
+
+#: change account info for line number: bound1 < line number < bound2
+bound1=$( grep -m 1 -n 'MACHINE_ID = orion'  $workfile | cut -d: -f1 )
+bound2=$( grep -m 1 -n 'MACHINE_ID = jet' $workfile | cut -d: -f1 )
+
+#: log
+echo   " OLD ACC INFO"                            >> $log
+echo    "*************************************"   >> $log
+sed -n  "${bound1},${bound2}p" $workfile          >> $log
+echo -e "*************************************\n" >> $log
+
+#: change QUEUE
+changeme=$( sed -n "${bound1},${bound2}p"    $workfile | grep -m 1 "QUEUE" )
+sed -i "$bound1,$bound2 s/$changeme/$queue/" $workfile
+
+#: change COMPILE_QUEUE
+changeme=$( sed -n "${bound1},${bound2}p"            $workfile | grep "COMPILE_QUEUE" )
+sed -i "$bound1,$bound2 s/$changeme/$compile_queue/" $workfile
+
+#: change ACCNR
+changeme=$( sed -n "${bound1},${bound2}p"    $workfile | grep "ACCNR" )
+sed -i "$bound1,$bound2 s/$changeme/$accnr/" $workfile
+
+#: change STMP
+changeme=$( sed -n "${bound1},${bound2}p"   $workfile | grep "STMP" )
+sed -i "$bound1,$bound2 s:$changeme:$stmp:" $workfile
+
+#: change PTMP
+changeme=$( sed -n "${bound1},${bound2}p"   $workfile | grep "PTMP" )
+sed -i "$bound1,$bound2 s:$changeme:$ptmp:" $workfile
+
+
+#: LOG
+echo "NEW ACC INFO"                               >> $log
+echo "*************************************"      >> $log
+sed -n "${bound1},${bound2}p" $workfile           >> $log
+echo -e "*************************************\n" >> $log
+
+#: run regression tests
+echo    "RUNNING $workfile"                                >> $log
+echo    "SEE     $workdir/log_hera.intel for job progress" >> $log
+echo    "*************************************"            >> $log
+echo -e "*************************************\n"          >> $log
+($workfile -s -l $conf_file)                               >> $log 2>&1
