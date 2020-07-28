@@ -11,8 +11,8 @@ user=$USER
 queue="  QUEUE=windfall"
 compile_queue="  COMPILE_QUEUE=batch"
 accnr="  ACCNR=gfdlhires"
-stmp="  STMP=/work/noaa/gfdlscr/mlee03/stmp"
-ptmp="  PTMP=/work/noaa/gfdlscr/mlee03/stmp"
+#stmp="  STMP=/work/noaa/gfdlscr/mlee03/stmp"
+#ptmp="  PTMP=/work/noaa/gfdlscr/mlee03/stmp"
 disknm=''
 
 
@@ -48,6 +48,11 @@ while getopts "a:b:d:c:m:h" myopts ; do
 	    exit ;;
     esac
 done
+
+
+#: STMP and PTMP
+stmp="  STMP=$workdir/stmp"
+ptmp="  PTMP=$workdir/stmp"
 
 
 #: LOG
