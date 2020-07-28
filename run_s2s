@@ -22,9 +22,6 @@ branch='develop'
 conf_file='rt.conf'
 workdir=$hera_scratch/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 
-#: change stmp and ptmp location to be inside workdir
-stmp="  STMP=$workdir/stmp4"
-ptmp="  PTMP=$workdir/stmp2"
 
 #: get user-defined arguments 
 while getopts "a:b:d:c:m:h" myopts ; do
@@ -51,6 +48,11 @@ while getopts "a:b:d:c:m:h" myopts ; do
 	    exit ;;
     esac
 done
+
+
+#: change stmp and ptmp location to be inside workdir
+stmp="  STMP=$workdir/stmp4"
+ptmp="  PTMP=$workdir/stmp2"
 
 
 #: LOG
