@@ -11,8 +11,8 @@ user=$USER
 queue="  QUEUE=windfall"
 compile_queue="  COMPILE_QUEUE=windfall"
 accnr="  ACCNR=gfdlport"
-stmp="  STMP=/scratch2/GFDL/gfdlscr/$USER/stmp4"
-ptmp="  PTMP=/scratch2/GFDL/gfdlscr/$USER/stmp2"
+#stmp="  STMP=/scratch2/GFDL/gfdlscr/$USER/stmp4"
+#ptmp="  PTMP=/scratch2/GFDL/gfdlscr/$USER/stmp2"
 disknm=''
 
 
@@ -22,6 +22,9 @@ branch='develop'
 conf_file='rt.conf'
 workdir=$hera_scratch/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 
+#: change stmp and ptmp location to be inside workdir
+stmp="  STMP=$workdir/stmp4"
+ptmp="  PTMP=$workdir/stmp2"
 
 #: get user-defined arguments 
 while getopts "a:b:d:c:m:h" myopts ; do
@@ -43,8 +46,8 @@ while getopts "a:b:d:c:m:h" myopts ; do
 	    echo    "      REPO      $ufs_model"
 	    echo    "      BRANCH    $branch"
 	    echo    "      WORKDIR   $workdir"
-	    echo    "      RT.SH     $workdir/ufs-weather-model/tests/rt.sh"
-	    echo -e "      RT.CONF   $workdir/ufs-weather-model/tests/$conf_file\n"
+	    echo    "      RT.SH     $workdir/ufs-s2s-model/tests/rt.sh"
+	    echo -e "      RT.CONF   $workdir/ufs-s2s-model/tests/$conf_file\n"
 	    exit ;;
     esac
 done
@@ -75,7 +78,7 @@ echo -e "*************************************\n"        >> $log
 
 
 #: change workdir
-workdir=$workdir/ufs-weather-model/tests
+workdir=$workdir/ufs-s2s-model/tests
 cd $workdir
 
 
