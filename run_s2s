@@ -2,35 +2,34 @@
 
 
 #: ./run_s2s.sh -h 
-#: TODO:  options for DISKNM to specify baseline results
+#: TODO:  options for DISKNM to specify baseline
 
 
 #: rt.sh variables
-workdir=/work/noaa/gfdlscr/$USER
+scratch=/work/noaa/gfdlscr/$USER
 user=$USER
 queue="  QUEUE=windfall"
 compile_queue="  COMPILE_QUEUE=batch"
 accnr="  ACCNR=gfdlhires"
-#stmp="  STMP=/work/noaa/gfdlscr/mlee03/stmp"
-#ptmp="  PTMP=/work/noaa/gfdlscr/mlee03/stmp"
 disknm=''
 
 
 #: defaults
 ufs_model='https://github.com/ufs-community/ufs-s2s-model.git'
 branch='develop'
-conf_file='rt_orion.conf'
-workdir=$workdir/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
-
+conf_file='rt.conf'
+workdir=$scratch/S2S_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
+stophere=FALSE
 
 #: get user-defined arguments 
-while getopts "a:b:d:c:m:h" myopts ; do
+while getopts "a:b:d:c:m:qh" myopts ; do
     case ${myopts} in 
 	a) ufs_model=${OPTARG}   ;;
 	b) branch=${OPTARG}      ;;
 	d) workdir=${OPTARG}     ;;
 	c) conf_file=${OPTARG}   ;;
 	m) log_message=${OPTARG} ;;
+	q) stophere=TRUE         ;;
 	h)
 	    echo -e "\n USAGE"
 	    echo    " ./run_rts.sh -d directory -a repo_address -b branch -c conf_file -m message"
@@ -43,16 +42,16 @@ while getopts "a:b:d:c:m:h" myopts ; do
 	    echo    "      REPO      $ufs_model"
 	    echo    "      BRANCH    $branch"
 	    echo    "      WORKDIR   $workdir"
-	    echo    "      RT.SH     $workdir/ufs-weather-model/tests/rt.sh"
-	    echo -e "      RT.CONF   $workdir/ufs-weather-model/tests/$conf_file\n"
+	    echo    "      RT.SH     $workdir/ufs-s2s-model/tests/rt.sh"
+	    echo -e "      RT.CONF   $workdir/ufs-s2s-model/tests/$conf_file\n"
 	    exit ;;
     esac
 done
 
 
-#: STMP and PTMP
-stmp="  STMP=$workdir/stmp"
-ptmp="  PTMP=$workdir/stmp"
+#: change stmp and ptmp location to be inside workdir
+stmp="  STMP=$workdir/stmp4"
+ptmp="  PTMP=$workdir/stmp2"
 
 
 #: LOG
@@ -80,11 +79,11 @@ echo -e "*************************************\n"        >> $log
 
 
 #: change workdir
-workdir=$workdir/ufs-weather-model/tests
+workdir=$workdir/ufs-s2s-model/tests
 cd $workdir
 
 
-#: check to see if the workflow script exists
+#: check to see if workflow script exists
 if [ -f $workdir/rt.sh ] ; then
     workfile=$workdir/rt.sh
     echo "rt.sh:   $workfile" >> $log
@@ -110,7 +109,7 @@ cp $workfile $workfile.ORIGINAL
 
 #: change account info for line number: bound1 < line number < bound2
 bound1=$( grep -m 1 -n 'MACHINE_ID = orion'  $workfile | cut -d: -f1 )
-bound2=$( grep -m 1 -n 'MACHINE_ID = jet' $workfile | cut -d: -f1 )
+bound2=$( grep -m 1 -n 'MACHINE_ID = jet'    $workfile | cut -d: -f1 )
 
 #: log
 echo   " OLD ACC INFO"                            >> $log
@@ -144,6 +143,15 @@ echo "NEW ACC INFO"                               >> $log
 echo "*************************************"      >> $log
 sed -n "${bound1},${bound2}p" $workfile           >> $log
 echo -e "*************************************\n" >> $log
+
+
+#: stophere without running
+if [ $stophere == 'TRUE' ] ; then
+    echo "EXITING.  TO RUN REGRESSION TESTS"
+    echo "$workfile -s -l $conf_file"
+    exit
+fi
+
 
 #: run regression tests
 echo    "RUNNING $workfile"                                >> $log

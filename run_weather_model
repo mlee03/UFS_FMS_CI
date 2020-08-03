@@ -6,31 +6,30 @@
 
 
 #: rt.sh variables
-workdir=/work/noaa/gfdlscr/$USER
+scratch=/work/noaa/gfdlscr/$USER
 user=$USER
 queue="  QUEUE=windfall"
 compile_queue="  COMPILE_QUEUE=batch"
 accnr="  ACCNR=gfdlhires"
-#stmp="  STMP=/work/noaa/gfdlscr/mlee03/stmp"
-#ptmp="  PTMP=/work/noaa/gfdlscr/mlee03/stmp"
 disknm=''
 
 
 #: defaults
 ufs_model='https://github.com/ufs-community/ufs-weather-model.git'
 branch='develop'
-conf_file='rt_orion.conf'
-workdir=$workdir/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
-
+conf_file='rt.conf'
+workdir=$scratch/WM_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
+stophere=FALSE
 
 #: get user-defined arguments 
-while getopts "a:b:d:c:m:h" myopts ; do
+while getopts "a:b:d:c:m:qh" myopts ; do
     case ${myopts} in 
 	a) ufs_model=${OPTARG}   ;;
 	b) branch=${OPTARG}      ;;
 	d) workdir=${OPTARG}     ;;
 	c) conf_file=${OPTARG}   ;;
 	m) log_message=${OPTARG} ;;
+	q) stophere=TRUE         ;;
 	h)
 	    echo -e "\n USAGE"
 	    echo    " ./run_rts.sh -d directory -a repo_address -b branch -c conf_file -m message"
@@ -50,9 +49,9 @@ while getopts "a:b:d:c:m:h" myopts ; do
 done
 
 
-#: STMP and PTMP
-stmp="  STMP=$workdir/stmp"
-ptmp="  PTMP=$workdir/stmp"
+#: change stmp and ptmp location to be inside workdir
+stmp="  STMP=$workdir/stmp4"
+ptmp="  PTMP=$workdir/stmp2"
 
 
 #: LOG
@@ -144,6 +143,15 @@ echo "NEW ACC INFO"                               >> $log
 echo "*************************************"      >> $log
 sed -n "${bound1},${bound2}p" $workfile           >> $log
 echo -e "*************************************\n" >> $log
+
+
+#: stophere without running
+if [ $stophere == 'TRUE' ] ; then
+    echo "EXITING.  TO RUN REGRESSION TESTS"
+    echo "$workfile -s -l $conf_file"
+    exit
+fi
+
 
 #: run regression tests
 echo    "RUNNING $workfile"                                >> $log
