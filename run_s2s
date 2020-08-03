@@ -18,17 +18,18 @@ disknm=''
 ufs_model='https://github.com/ufs-community/ufs-s2s-model.git'
 branch='develop'
 conf_file='rt.conf'
-workdir=$scratch/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
-
+workdir=$scratch/S2S_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
+stophere=FALSE
 
 #: get user-defined arguments 
-while getopts "a:b:d:c:m:h" myopts ; do
+while getopts "a:b:d:c:m:qh" myopts ; do
     case ${myopts} in 
 	a) ufs_model=${OPTARG}   ;;
 	b) branch=${OPTARG}      ;;
 	d) workdir=${OPTARG}     ;;
 	c) conf_file=${OPTARG}   ;;
 	m) log_message=${OPTARG} ;;
+	q) stophere=TRUE         ;;
 	h)
 	    echo -e "\n USAGE"
 	    echo    " ./run_rts.sh -d directory -a repo_address -b branch -c conf_file -m message"
@@ -142,6 +143,14 @@ echo "NEW ACC INFO"                               >> $log
 echo "*************************************"      >> $log
 sed -n "${bound1},${bound2}p" $workfile           >> $log
 echo -e "*************************************\n" >> $log
+
+
+#: stophere without running
+if [ $stophere == 'TRUE' ] ; then
+    echo "EXITING.  TO RUN REGRESSION TESTS"
+    echo "$workfile -s -l $conf_file"
+    exit
+fi
 
 
 #: run regression tests
