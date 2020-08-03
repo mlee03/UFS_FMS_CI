@@ -2,17 +2,15 @@
 
 
 #: ./run_s2s.sh -h 
-#: TODO:  options for DISKNM to specify baseline results
+#: TODO:  options for DISKNM to specify baseline
 
 
 #: rt.sh variables
-hera_scratch=/scratch2/GFDL/gfdlscr/$USER
+scratch=/scratch2/GFDL/gfdlscr/$USER
 user=$USER
 queue="  QUEUE=windfall"
 compile_queue="  COMPILE_QUEUE=windfall"
 accnr="  ACCNR=gfdlport"
-#stmp="  STMP=/scratch2/GFDL/gfdlscr/$USER/stmp4"
-#ptmp="  PTMP=/scratch2/GFDL/gfdlscr/$USER/stmp2"
 disknm=''
 
 
@@ -20,7 +18,7 @@ disknm=''
 ufs_model='https://github.com/ufs-community/ufs-s2s-model.git'
 branch='develop'
 conf_file='rt.conf'
-workdir=$hera_scratch/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
+workdir=$scratch/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 
 
 #: get user-defined arguments 
@@ -84,7 +82,7 @@ workdir=$workdir/ufs-s2s-model/tests
 cd $workdir
 
 
-#: check to see if the workflow script exists
+#: check to see if workflow script exists
 if [ -f $workdir/rt.sh ] ; then
     workfile=$workdir/rt.sh
     echo "rt.sh:   $workfile" >> $log

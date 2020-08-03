@@ -12,8 +12,6 @@ user=$USER
 queue="  QUEUE=windfall"
 compile_queue="  COMPILE_QUEUE=windfall"
 accnr="  ACCNR=gfdlport"
-#stmp="  STMP=/scratch2/GFDL/gfdlscr/$USER/stmp4"
-#ptmp="  PTMP=/scratch2/GFDL/gfdlscr/$USER/stmp2"
 disknm=''
 
 
@@ -22,6 +20,7 @@ ufs_model='https://github.com/ufs-community/ufs-weather-model.git'
 branch='develop'
 conf_file='rt.conf'
 workdir=$scratch/UFS_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
+
 
 #: get user-defined arguments 
 while getopts "a:b:d:c:m:h" myopts ; do
