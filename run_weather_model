@@ -159,3 +159,26 @@ echo    "SEE     $workdir/log_hera.intel for job progress" >> $log
 echo    "*************************************"            >> $log
 echo -e "*************************************\n"          >> $log
 ($workfile -s -l $conf_file)                               >> $log 2>&1
+
+
+#: summarize results
+echo    "*************************************" >> $log
+echo    "*************************************" >> $log
+echo    "RESULTS"                               >> $log
+
+
+#: total number of regression tests
+nlogs=$( ls $workdir/log_orion.intel/rt*.log | grep -c ".log" )
+echo " NUMBER OF REGRESSION TESTS:  $nlogs " 
+
+
+#: grep results from rt*.log
+for ilog in $workdir/log_orion.intel/rt*.log ; do
+    tail -n 2 $ilog | head -n 1 | awk '{printf "%-5s %-5s %-5s %10s\n", $1, $2, $4, $3}' >> $log
+done
+
+
+#: end
+echo    "*************************************" >> $log
+echo    "*************************************" >> $log
+echo `env TZ=America/New_York date`  >> $log
