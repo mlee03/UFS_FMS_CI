@@ -1,4 +1,4 @@
-FROM mklee03/external_libs:v1.0.0
+FROM mklee03/external_libs:ufs-v1.0.0
 
 #: WORKDIR /ufs_libraries
 
