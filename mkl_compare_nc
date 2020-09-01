@@ -37,6 +37,7 @@ for rt_test in ${testlist[@]} ; do
 
     if [[ $rt_log == '' || ! -f $rt_log ]] ; then
 	echo "$rt_test  NOT FOUND"
+	continue
     fi
 
     refdir=$( grep "baseline dir" $rt_log | awk '{print $4}' )
@@ -59,8 +60,9 @@ for rt_test in ${testlist[@]} ; do
 
 	    if [[ $myline == *"NOT OK" ]] ; then	    
 		echo -e "\n********** $myfile **********"   >> $outputfile	    
-		if [ $jobtype == 'all' ] ; then    
-		    nccmp -c 1 -f -m -d $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
+		echo $myline                                >> $outputfile
+		if [ $jobtype == 'meta' ] ; then    
+		    nccmp -c 1 -f -m $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
 		elif [ $jobtype == 'data' ] ; then
 		    nccmp -c 1 -f -d $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
 		fi		
@@ -69,6 +71,7 @@ for rt_test in ${testlist[@]} ; do
 		echo " MISSING FILE "                       >> $outputfile
 	    else
 		echo -e "\n********** $myfile **********"   >> $outputfile
+		echo $myline                                >> $outputfile
 	    fi
 	fi
 	
