@@ -1,0 +1,7 @@
+FROM mklee03/nceplibs:CHANGEME
+
+RUN echo "NCEPLIBS_DIR = $NCEPLIBS_DIR"
+RUN echo "EXTERNAL_DIR = $EXTERNAL_DIR"
+RUN echo "PATH = $PATH" 
+RUN echo `ls -R $NCEPLIBS_DIR`
+RUN echo `ls -R $EXTERNAL_DIR`

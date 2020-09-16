@@ -1,0 +1,58 @@
+FROM mklee03/external_libs:CHANGEME
+
+    
+COPY . NCEPLIBS_tmp/
+RUN cd NCEPLIBS_tmp    \
+    && mkdir -p build && cd build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=/ufs_libraries/NCEPLIBS -DCMAKE_PREFIX_PATH=/ufs_libraries/NCEPLIBS_external_libs -DDEPLOY=ON \
+    && make && make deploy \
+    && cd /ufs_libraries && rm -rf NCEPLIBS_tmp
+
+
+ENV NCEPLIBS_DIR /ufs_libraries/NCEPLIBS
+ENV EXTERNAL_DIR /ufs_libraries/NCEPLIBS_external_libs
+ENV PATH $NCEPLIBS_DIR/bin:$EXTERNAL_DIR/bin:${PATH}
+  
+ENV bacio_VERSION 2.4.0
+ENV BACIO_INC4 $NCEPLIBS_DIR/include_4
+ENV BACIO_INC8 $NCEPLIBS_DIR/include_8
+ENV BACIO_LIB4 $NCEPLIBS_DIR/lib/libbacio_4.a
+ENV BACIO_LIB8 $NCEPLIBS_DIR/lib/libbacio_8.a
+
+ENV nemsio_VERSION 2.5.1
+ENV NEMSIO_INC $NCEPLIBS_DIR/include
+ENV NEMSIO_LIB $NCEPLIBS_DIR/libnemsio.a
+
+ENV SP_VERSION 2.3.0
+ENV SP_INC4 $NCEPLIBS_DIR/include_4
+ENV SP_INC8 $NCEPLIBS_DIR/include_8
+ENV SP_INCd $NCEPLIBS_DIR/include_d
+ENV SP_LIB4 $NCEPLIBS_DIR/lib/libsp_4.a
+ENV SP_LIB8 $NCEPLIBS_DIR/lib/libsp_8.a
+ENV SP_LIBd $NCEPLIBS_DIR/lib/libsp_d.a
+    
+ENV W3EMC_VERSION 2.7.0
+ENV W3EMC_INC4 $NCEPLIBS_DIR/include_4
+ENV W3EMC_INC8 $NCEPLIBS_DIR/include_8
+ENV W3EMC_INCd $NCEPLIBS_DIR/include_d
+ENV W3EMC_LIB4 $NCEPLIBS_DIR/lib/libw3emc_4.a
+ENV W3EMC_LIB8 $NCEPLIBS_DIR/lib/libw3emc_8.a
+ENV W3EMC_LIBd $NCEPLIBS_DIR/lib/libw3emc_d.a
+    
+ENV W3NCO_VERSION 2.4.0
+ENV W3NCO_INC4 $NCEPLIBS_DIR/include_4
+ENV W3NCO_INC8 $NCEPLIBS_DIR/include_8
+ENV W3NCO_INCd $NCEPLIBS_DIR/include_d
+ENV W3NCO_LIB4 $NCEPLIBS_DIR/lib/libw3nco_4.a
+ENV W3NCO_LIB8 $NCEPLIBS_DIR/lib/libw3nco_8.a
+ENV W3NCO_LIBd $NCEPLIBS_DIR/lib/libw3nco_d.a
+
+ENV NCEPPOST_VERSION dceca26
+ENV NCEPPOST_INC $NCEPLIBS_DIR/include
+ENV NCEPPOST_LIB $NCEPLIBS_DIR/lib/libnceppost.a
+ENV POST_INC     $NCEPLIBS_DIR/include
+ENV POST_LIB     $NCEPLIBS_DIR/lib/libnceppost.a
+
+ENV ESMFMKFILE $EXTERNAL_DIR/lib64/esmf.mk  
+ENV NETCDF $EXTERNAL_DIR
+

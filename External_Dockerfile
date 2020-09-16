@@ -1,0 +1,32 @@
+FROM ubuntu:latest
+    
+ENV DEBIAN_FRONTEND    noninteractive
+SHELL ["/bin/bash","-c"]
+
+RUN apt-get update && \
+    apt-get install -y \
+            autoconf \
+            automake \
+            g++ \
+            gcc \
+            gfortran \
+            git \
+            libmpich-dev \
+            libtool \
+            make \
+            pkg-config \
+            python \
+            vim \
+            curl \
+            cmake
+
+COPY . NCEPLIBS-external/
+RUN cd NCEPLIBS-external \
+    && mkdir -p build && cd build \
+    && cmake -DCMAKE_INSTALL_PREFIX=/ufs_libraries/NCEPLIBS_external_libs -DCC=gcc -DCXX=g++ -DFC=gfortran -DBUILD_MPI=OFF .. \
+    && make \
+    && cd /ufs_libraries \
+    && rm -rf NCEPLIBS-external
+
+  
+      

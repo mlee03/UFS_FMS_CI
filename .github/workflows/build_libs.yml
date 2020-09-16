@@ -1,0 +1,88 @@
+name: build_libs
+
+on:
+  push:
+    branches:
+      - build_libs
+  pull_request:
+    branches:
+      - build_libs
+
+
+env:
+  HASHFILE: LIB_HASHFILE
+
+  
+jobs:
+  external_lib:
+    runs-on:  ubuntu-latest
+    steps: 
+      - name: checkout 
+        uses: actions/checkout@v2
+
+      - name: read HASHFILE
+        run: |
+          echo ::set-env name=EX_RUN::$(    grep -m 1 "EXTERNAL" ${{env.HASHFILE}} | awk '{print $2}' )
+          echo ::set-env name=EX_HASH::$(   grep -m 1 "EXTERNAL" ${{env.HASHFILE}} | awk '{print $3}' )
+          echo ::set-env name=EX_BRANCH::$( grep -m 1 "EXTERNAL" ${{env.HASHFILE}} | awk '{print $4}' )
+          echo ::set-env name=EX_REPO::$(   grep -m 1 "EXTERNAL" ${{env.HASHFILE}} | awk '{print $5}' )
+
+      - name: go to next job if EX_RUN == N
+        if: ${{ env.EX_RUN == 'N' }}
+        run: echo "Will not compile ${{env.EX_REPO}} ${{env.EX_BRANCH}} ${{env.EX_HASH}}"
+              
+      - name:  compile if EX_RUN == Y
+        if: ${{ env.EX_RUN == 'Y' }}
+        run: |
+          git clone --recursive --branch ${{env.EX_BRANCH}} ${{env.EX_REPO}} code
+          cd code && git checkout ${{env.EX_HASH}}
+          docker build -f ../External_Dockerfile -t external_libs:${{env.EX_HASH}} .
+          echo "${{secrets.DOCKER_PASSWORD}}" | docker login -u ${{secrets.DOCKER_USERNAME}} --password-stdin
+          docker tag external_libs:${{env.EX_HASH}} mklee03/external_libs:${{env.EX_HASH}}
+          docker push mklee03/external_libs:${{env.EX_HASH}}
+
+  nceplib:
+    needs: external_lib
+    runs-on:  ubuntu-latest
+    steps: 
+      - name: checkout 
+        uses: actions/checkout@v2
+
+      - name: read HASHFILE
+        run: |
+          echo ::set-env name=RUN::$(     grep -m 1 "NCEPLIBS" ${{env.HASHFILE}} | awk '{print $2}' )
+          echo ::set-env name=HASH::$(    grep -m 1 "NCEPLIBS" ${{env.HASHFILE}} | awk '{print $3}' )
+          echo ::set-env name=BRANCH::$(  grep -m 1 "NCEPLIBS" ${{env.HASHFILE}} | awk '{print $4}' )
+          echo ::set-env name=REPO::$(    grep -m 1 "NCEPLIBS" ${{env.HASHFILE}} | awk '{print $5}' )
+          echo ::set-env name=EX_HASH::$( grep -m 1 "EXTERNAL" ${{env.HASHFILE}} | awk '{print $3}' )
+
+      - name: exit if RUN == N
+        if: ${{ env.RUN == 'N' }}
+        run: echo "Will not compile ${{env.REPO}} ${{env.BRANCH}} ${{env.HASH}}"
+              
+      - name:  compile if RUN == Y
+        if: ${{ env.RUN == 'Y' }}
+        run: |
+          sed -i "s/CHANGEME/${{env.EX_HASH}}/" NCEPLIBS_Dockerfile
+          git clone --recursive --branch ${{env.BRANCH}} ${{env.REPO}} code
+          cd code && git checkout ${{env.HASH}}
+          docker build -f ../NCEPLIBS_Dockerfile -t nceplibs:${{env.HASH}} .
+          echo "${{secrets.DOCKER_PASSWORD}}" | docker login -u ${{secrets.DOCKER_USERNAME}} --password-stdin
+          docker tag nceplibs:${{env.HASH}} mklee03/nceplibs:${{env.HASH}}
+          docker push mklee03/nceplibs:${{env.HASH}}
+
+  testing:
+    needs: nceplib
+    runs-on:  ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: read hasfile
+        run: echo ::set-env name=NCEPHASH::$( grep -m 1 "NCEPLIBS" ${{env.HASHFILE}} | awk '{print $3}' )
+  
+      - name: run test Dockerfile
+        run: |
+          sed -i "s/CHANGEME/${{env.NCEPHASH}}/" testing_Dockerfile
+          docker build -f testing_Dockerfile .
+      
