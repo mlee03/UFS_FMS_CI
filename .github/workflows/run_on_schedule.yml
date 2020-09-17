@@ -1,8 +1,9 @@
 name: run_on_schedule
 
 on:
-  schedule:
-    - cron: '*/59 7-19 * * 1-5'
+  push :
+#  schedule:
+#    - cron: '*/59 7-19 * * 1-5'
 
 jobs:
 
