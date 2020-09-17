@@ -18,7 +18,7 @@ jobs:
 
       - name: get NCEPLIB HASH (not the best way?)
         run: |
-          git clone --branch build_libs https://github.com/mlee03/UFS_CI_TEST.git build_libs
+          git clone --branch build_libs https://github.com/mlee03/UFS_FMS_CI.git build_libs
           mv build_libs/LIB_HASHFILE . && rm -rf build_libs
 
   
