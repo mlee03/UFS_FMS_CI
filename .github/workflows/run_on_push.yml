@@ -1,20 +1,28 @@
-name: master_build
+name: run_on_schedule
 
 on:
   push:
     branches:
       - master #nobranch
-  pull_request:  
+  pull_request:
     branches:
       - master #nobranch
 
 jobs:
+
   ufs_fms_ci:
     runs-on:  ubuntu-latest
+    needs: check_previous_run
     steps: 
       - name: checkout 
         uses: actions/checkout@v2
 
+      - name: get NCEPLIB HASH (not the best way?)
+        run: |
+          git clone --branch build_libs https://github.com/mlee03/UFS_CI_TEST.git build_libs
+          mv build_libs/LIB_HASHFILE . && rm -rf build_libs
+
+  
       - name: cache ncep hashfile
         uses: actions/cache@v2
         with:
@@ -33,3 +41,4 @@ jobs:
         with:
           name: logfile
           path: LOG
+
