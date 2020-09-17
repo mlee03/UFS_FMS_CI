@@ -1,14 +1,15 @@
-FROM mklee03/nceplibs:CHANGEME
+FROM mklee03/nceplibs:CHANGEME 
 
 #: WORKDIR /ufs_libraries
-
+#ENV ESMFMKFILE  $EXTERNAL_DIR/lib/esmf.mk
+  
 COPY . UFS/
 RUN cd UFS \
-    && chmod +x /ufs_libraries/NCEPLIBS/bin/setenv_nceplibs.sh \
-    && source /ufs_libraries/NCEPLIBS/bin/setenv_nceplibs.sh \
-    && export COMPILER=gnu \
-    && export CMAKE_Platform=linux.gnu \
+    && export CMAKE_C_COMPILER=mpicc        \
+    && export CMAKE_CXX_COMPILER=mpicxx     \
+    && export CMAKE_Fortran_COMPILER=mpif90 \
     && export CMAKE_VERBOSE_MAKEFILE=ON \
-    && ./build.sh
+    && export CMAKE_Platform=linux.gnu  \
+    && ./build.sh 
 
 
