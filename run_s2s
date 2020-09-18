@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #: ./run_s2s.sh -h 
 #: TODO:  options for DISKNM to specify baseline
 
@@ -16,31 +15,35 @@ disknm=''
 
 #: defaults
 ufs_model='https://github.com/ufs-community/ufs-s2s-model.git'
-branch='develop'
+ufsbranch='develop'
+fmsbranch='DEFAULT'
 conf_file='rt.conf'
 workdir=$scratch/S2S_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 stophere=FALSE
 
 #: get user-defined arguments 
-while getopts "a:b:d:c:m:qh" myopts ; do
+while getopts "a:u:f:d:c:m:qh" myopts ; do
     case ${myopts} in 
 	a) ufs_model=${OPTARG}   ;;
-	b) branch=${OPTARG}      ;;
 	d) workdir=${OPTARG}     ;;
 	c) conf_file=${OPTARG}   ;;
+	f) fmsbranch=${OPTARG}   ;;
 	m) log_message=${OPTARG} ;;
 	q) stophere=TRUE         ;;
+	u) ufsbranch=${OPTARG}   ;;
 	h)
 	    echo -e "\n USAGE"
-	    echo    " ./run_rts.sh -d directory -a repo_address -b branch -c conf_file -m message"
+	    echo    " ./run_rts.sh -d directory -a repo_address -b ufsbranch -c conf_file -m message"
 	    echo    " -d directory:   user-specified work directory" 
-	    echo    " -a address:     UFS repo address to checkout from GitHub"
-	    echo    " -b branch:      branch to checkout from GitHub"
 	    echo    " -c conf_file:   rt.conf"
+	    echo    " -a address:     UFS repo address to checkout from GitHub"
+	    echo    " -u ufsbranch:   UFS branch/tag to checkout from GitHub"
+	    echo    " -f fmsbranch:   FMS branch/tag to checkout"
 	    echo -e " -m message:     Message to print in log \n"
 	    echo    " Will default to  "
 	    echo    "      REPO      $ufs_model"
-	    echo    "      BRANCH    $branch"
+	    echo    "      UFSBRANCH $ufsbranch"
+	    echo    "      FMSBRANCH DEFAULT"
 	    echo    "      WORKDIR   $workdir"
 	    echo    "      RT.SH     $workdir/ufs-s2s-model/tests/rt.sh"
 	    echo -e "      RT.CONF   $workdir/ufs-s2s-model/tests/$conf_file\n"
@@ -66,20 +69,28 @@ touch -a $log
 echo `env TZ=America/New_York date`  >> $log 
 echo ''                              >> $log
 echo    "UFS REPOSITORY  $ufs_model" >> $log
-echo    "UFS BRANCH      $branch"            >> $log
-echo -e "MESSAGE         $log_message\n"     >> $log
+echo    "UFS BRANCH      $ufsbranch"     >> $log
+echo    "FMS BRANCH      $fmsbranch"     >> $log 
+echo -e "MESSAGE         $log_message\n" >> $log
+
+
+#: change workdir
+workdir=$workdir/ufs-s2s-model
 
 
 #: clone UFS weather model
 echo "CLONING" >> $log
-echo "git clone --recursive --branch $branch $ufs_model" >> $log
-echo "*************************************"             >> $log
-(git clone --recursive --branch $branch $ufs_model)      >> $log 2>&1
-echo -e "*************************************\n"        >> $log
+echo "git clone --recursive --branch $ufsbranch $ufs_model" >> $log
+echo "*************************************"                >> $log
+(git clone --recursive --branch $ufsbranch $ufs_model)      >> $log 2>&1
+if [ $fmsbranch != 'DEFAULT' ] ; then
+    (cd $workdir/FMS && git checkout $fmsbranch)            >> $log 2>&1
+fi
+echo -e "*************************************\n"           >> $log
 
 
 #: change workdir
-workdir=$workdir/ufs-s2s-model/tests
+workdir=$workdir/tests
 cd $workdir
 
 

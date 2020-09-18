@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-#: ./run_s2s.sh -h 
-#: TODO:  options for DISKNM to specify baseline results
+#: ./run_weather_model -h 
+#: TODO:  options for DISKNM to specify different baseline
 
 
 #: rt.sh variables
@@ -16,31 +16,36 @@ disknm=''
 
 #: defaults
 ufs_model='https://github.com/ufs-community/ufs-weather-model.git'
-branch='develop'
+ufsbranch='develop'
+fmsbranch='DEFAULT'
 conf_file='rt.conf'
 workdir=$scratch/WM_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 stophere=FALSE
 
+
 #: get user-defined arguments 
-while getopts "a:b:d:c:m:qh" myopts ; do
+while getopts "a:u:d:c:f:m:qh" myopts ; do
     case ${myopts} in 
 	a) ufs_model=${OPTARG}   ;;
-	b) branch=${OPTARG}      ;;
 	d) workdir=${OPTARG}     ;;
 	c) conf_file=${OPTARG}   ;;
+	f) fmsbranch=${OPTARG}   ;; 
 	m) log_message=${OPTARG} ;;
 	q) stophere=TRUE         ;;
+	u) ufsbranch=${OPTARG}   ;;
 	h)
 	    echo -e "\n USAGE"
-	    echo    " ./run_rts.sh -d directory -a repo_address -b branch -c conf_file -m message"
+	    echo    " ./run_rts.sh -d directory -a repo_address -b ufsbranch -c conf_file -m message"
 	    echo    " -d directory:   user-specified work directory" 
-	    echo    " -a address:     UFS repo address to checkout from GitHub"
-	    echo    " -b branch:      branch to checkout from GitHub"
 	    echo    " -c conf_file:   rt.conf"
+	    echo    " -a address:     UFS repo address to checkout from GitHub"
+	    echo    " -u ufsbranch:   UFS branch/tag to checkout from GitHub"
+	    echo    " -f fmsbranch:   FMS branch/tag to switch"
 	    echo -e " -m message:     Message to print in log \n"
 	    echo    " Will default to  "
-	    echo    "      REPO      $ufs_model"
-	    echo    "      BRANCH    $branch"
+	    echo    "      REPO      $ufs_model"	    
+	    echo    "      UFSBRANCH $ufsbranch"
+	    echo    "      FMSBRANCH DEFAULT"
 	    echo    "      WORKDIR   $workdir"
 	    echo    "      RT.SH     $workdir/ufs-weather-model/tests/rt.sh"
 	    echo -e "      RT.CONF   $workdir/ufs-weather-model/tests/$conf_file\n"
@@ -66,20 +71,28 @@ touch -a $log
 echo `env TZ=America/New_York date`  >> $log 
 echo ''                              >> $log
 echo    "UFS REPOSITORY  $ufs_model" >> $log
-echo    "UFS BRANCH      $branch"            >> $log
-echo -e "MESSAGE         $log_message\n"     >> $log
+echo    "UFS BRANCH      $ufsbranch"      >> $log
+echo    "FMS BRANCH      $fmsbranch"      >> $log
+echo -e "MESSAGE         $log_message\n"  >> $log
+
+
+#: change workdir
+workdir=$workdir/ufs-weather-model
 
 
 #: clone UFS weather model
 echo "CLONING" >> $log
-echo "git clone --recursive --branch $branch $ufs_model" >> $log
-echo "*************************************"             >> $log
-(git clone --recursive --branch $branch $ufs_model)      >> $log 2>&1
-echo -e "*************************************\n"        >> $log
+echo "git clone --recursive --branch $ufsbranch $ufs_model" >> $log
+echo "*************************************"                >> $log
+(git clone --recursive --ufsbranch $ufsbranch $ufs_model)   >> $log 2>&1
+if [ $fmsbranch != 'DEFAULT' ] ; then
+    (cd $workdir/FMS && git checkout $fmsbranch)            >> $log 2>&1
+fi
+echo -e "*************************************\n"           >> $log
 
 
 #: change workdir
-workdir=$workdir/ufs-weather-model/tests
+workdir=$workdir/tests
 cd $workdir
 
 
@@ -108,8 +121,8 @@ cp $workfile $workfile.ORIGINAL
 
 
 #: change account info for line number: bound1 < line number < bound2
-bound1=$( grep -m 1 -n 'MACHINE_ID = orion'  $workfile | cut -d: -f1 )
-bound2=$( grep -m 1 -n 'MACHINE_ID = jet' $workfile | cut -d: -f1 )
+bound1=$( grep -m 1 -n 'MACHINE_ID = orion'$workfile | cut -d: -f1 )
+bound2=$( grep -m 1 -n 'MACHINE_ID = jet'  $workfile | cut -d: -f1 )
 
 #: log
 echo   " OLD ACC INFO"                            >> $log

@@ -3,82 +3,119 @@
 module load fre/bronx-18
 
 jobtype=$1
+if [ $# -eq 0 ] ; then jobtype='all' ; fi
 
 testlist=( \
-    'fv3_ccpp_control'          'fv3_ccpp_decomp'                   'fv3_ccpp_2threads'             \
-    'fv3_ccpp_restart'          'fv3_ccpp_read_inc'                 'fv3_ccpp_wrtGauss_netcdf_esmf' \
-    'fv3_ccpp_wrtGauss_netcdf'  'fv3_ccpp_wrtGauss_netcdf_parallel' 'fv3_ccpp_wrtGlatlon_netcdf'    \
-    'fv3_ccpp_wrtGauss_nemsio'  'fv3_ccpp_wrtGauss_nemsio_c192'     'fv3_ccpp_stochy'               \
-    'fv3_ccpp_iau'              'fv3_ccpp_ca'                       'fv3_ccpp_lheatstrg'            \ 
-    'fv3_ccpp_gfdlmprad'        'fv3_ccpp_gfdlmprad_atmwav'                                         \ 
-    'fv3_ccpp_multigases'                                                                           \ 
-    'fv3_ccpp_control_32bit'    'fv3_ccpp_stretched'           'fv3_ccpp_stretched_nest'            \ 
-    'fv3_ccpp_regional_control' 'fv3_ccpp_regional_restart'    'fv3_ccpp_regional_quilt'          'fv3_ccpp_regional_c768' \ 
-    'fv3_ccpp_control_debug'    'fv3_ccpp_stretched_nest_debug'                                     \ 
-    'fv3_ccpp_gfdlmp'           'fv3_ccpp_gfdlmprad_gwd'       'fv3_ccpp_gfdlmprad_noahmp'          \ 
-    'fv3_ccpp_gfdlmp_hwrfsas'   'fv3_ccpp_csawmg'              'fv3_ccpp_satmedmf'                  \ 
-    'fv3_ccpp_satmedmfq'                                                                            \ 
-    'fv3_ccpp_gfdlmp_32bit'    'fv3_ccpp_gfdlmprad_32bit_post' 'fv3_ccpp_cpt'                       \
-    'fv3_ccpp_gsd'             'fv3_ccpp_rap'                  'fv3_ccpp_hrrr'                      \
-    'fv3_ccpp_thompson'        'fv3_ccpp_thompson_no_aero'     'fv3_ccpp_rrfs_v1beta'               \ 
-    'fv3_ccpp_gfs_v15p2'       'fv3_ccpp_gfs_v16beta'          'fv3_ccpp_gfs_v15p2_RRTMGP'       'fv3_ccpp_gfs_v16beta_RRTMGP'        \ 
-    'fv3_ccpp_gfs_v15p2_debug' 'fv3_ccpp_gfs_v16beta_debug'    'fv3_ccpp_gfs_v15p2_RRTMGP_debug' 'fv3_ccpp_gfs_v16beta_RRTMGP_debug'  \ 
-    'fv3_ccpp_gsd_debug'       'fv3_ccpp_gsd_diag3d_debug'     'fv3_ccpp_thompson_debug'         'fv3_ccpp_thompson_no_aero_debug'    \ 
-    'fv3_ccpp_rrfs_v1beta_debug'                                                                    \
-    'fv3_ccpp_gfsv16_csawmg'   'fv3_ccpp_gfsv16_csawmgt'                                            \ 
-    'fv3_ccpp_gocart_clm'      'fv3_ccpp_gfs_v16beta_flake'                                         \ 
+    'fv3_ccpp_control'  \
+    'fv3_ccpp_decomp'   \
+    'fv3_ccpp_2threads' \
+    'fv3_ccpp_restart'  \
+    'fv3_ccpp_read_inc' \
+    'fv3_ccpp_wrtGauss_netcdf_esmf'     \
+    'fv3_ccpp_wrtGauss_netcdf'          \
+    'fv3_ccpp_wrtGauss_netcdf_parallel' \
+    'fv3_ccpp_wrtGlatlon_netcdf'        \
+    'fv3_ccpp_wrtGauss_nemsio'          \
+    'fv3_ccpp_wrtGauss_nemsio_c192'     \
+    'fv3_ccpp_stochy'           \
+    'fv3_ccpp_iau'              \ 
+    'fv3_ccpp_ca'               \
+    'fv3_ccpp_lheatstrg'        \ 
+    'fv3_ccpp_gfdlmprad'        \
+    'fv3_ccpp_gfdlmprad_atmwav' \ 
+    'fv3_ccpp_multigases'       \
+    'fv3_ccpp_control_32bit'    \
+    'fv3_ccpp_stretched'        \
+    'fv3_ccpp_stretched_nest'   \ 
+    'fv3_ccpp_regional_control' \
+    'fv3_ccpp_regional_restart' \  
+    'fv3_ccpp_regional_quilt'   \
+    'fv3_ccpp_regional_c768'    \ 
+    'fv3_ccpp_control_debug'    \ 
+    'fv3_ccpp_stretched_nest_debug' \
+    'fv3_ccpp_gfdlmp'               \   
+    'fv3_ccpp_gfdlmprad_gwd'        \
+    'fv3_ccpp_gfdlmprad_noahmp'     \ 
+    'fv3_ccpp_gfdlmp_hwrfsas'       \
+    'fv3_ccpp_csawmg'               \
+    'fv3_ccpp_satmedmf'             \ 
+    'fv3_ccpp_satmedmfq'            \
+    'fv3_ccpp_gfdlmp_32bit'         \
+    'fv3_ccpp_gfdlmprad_32bit_post' \
+    'fv3_ccpp_cpt'      \
+    'fv3_ccpp_gsd'      \
+    'fv3_ccpp_rap'      \
+    'fv3_ccpp_hrrr'     \
+    'fv3_ccpp_thompson' \
+    'fv3_ccpp_thompson_no_aero'   \
+    'fv3_ccpp_rrfs_v1beta'        \ 
+    'fv3_ccpp_gfs_v15p2'          \
+    'fv3_ccpp_gfs_v16beta'        \
+    'fv3_ccpp_gfs_v15p2_RRTMGP'   \
+    'fv3_ccpp_gfs_v16beta_RRTMGP' \ 
+    'fv3_ccpp_gfs_v15p2_debug'    \
+    'fv3_ccpp_gfs_v16beta_debug'  \
+    'fv3_ccpp_gfs_v15p2_RRTMGP_debug'   \
+    'fv3_ccpp_gfs_v16beta_RRTMGP_debug' \ 
+    'fv3_ccpp_gsd_debug'                \
+    'fv3_ccpp_gsd_diag3d_debug'         \
+    'fv3_ccpp_thompson_debug'           \
+    'fv3_ccpp_thompson_no_aero_debug'   \ 
+    'fv3_ccpp_rrfs_v1beta_debug'        \
+    'fv3_ccpp_gfsv16_csawmg'            \
+    'fv3_ccpp_gfsv16_csawmgt'           \
+    'fv3_ccpp_gocart_clm'               \
+    'fv3_ccpp_gfs_v16beta_flake'        \
     'fv3_ccpp_wrtGauss_nemsio_c768' )
 
 
 for rt_test in ${testlist[@]} ; do
     
     echo $rt_test
+
+    #: get rt_0##_fv3_ccpp_${rt_test}_prod.log
     rt_log=$( ls rt*.log | grep "${rt_test}_prod.log" | grep "rt" )
 
+    #: check if rt_log exists
     if [[ $rt_log == '' || ! -f $rt_log ]] ; then
 	echo "$rt_test  NOT FOUND"
 	continue
     fi
 
+    #: get baseline dir and my working dir
     refdir=$( grep "baseline dir" $rt_log | awk '{print $4}' )
     mydir=$(  grep "working dir"  $rt_log | awk '{print $4}' )   
-
-    #: prep output file
-    outputfile=MKL_$rt_test
-    if [ -f $outputfile ] ; then
-	rm $outputfile
-    fi
-    touch -a $outputfile
-    echo "NEWDATA $mydir"  >> $outputfile
-    echo "REFDATA $refdir" >> $outputfile
     
+    #: prep output file
+    outputfile=NCCMP_$rt_test
+    if [ -f $outputfile ] ; then rm $outputfile ; fi
+    touch -a $outputfile
+    echo "1 NEWDATA $mydir"  >> $outputfile
+    echo "2 REFDATA $refdir" >> $outputfile
+    
+    #: read files to compare in $rt_log
     while read myline ; do
 
-	myfile=$( echo $myline | awk '{print $2}' )
-
+	#: get netcdf history or restart file
 	if [[ $myline == *"Comparing"* ]] ; then
+	    myfile=$( echo $myline | awk '{print $2}' )
+	    echo -e "\n*******************************" >> $outputfile
+	    echo $myline                                >> $outputfile
+	fi
 
-	    if [[ $myline == *"NOT OK" ]] ; then	    
-		echo -e "\n********** $myfile **********"   >> $outputfile	    
-		echo $myline                                >> $outputfile
-		if [ $jobtype == 'meta' ] ; then    
-		    nccmp -c 1 -f -m $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
-		elif [ $jobtype == 'data' ] ; then
-		    nccmp -c 1 -f -d $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
-		fi		
-	    elif [[ $myline == *"MISSING file"* ]] ; then
-		echo -e "\n********** $myfile **********"   >> $outputfile
-		echo " MISSING FILE "                       >> $outputfile
+	if [[ $myline == *"NOT OK"* ]] ; then
+	    if [ $jobtype == 'meta' ] ; then    
+		nccmp -c 1 -f -m $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
+	    elif [ $jobtype == 'data' ] ; then
+		nccmp -c 1 -f -d $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
 	    else
-		echo -e "\n********** $myfile **********"   >> $outputfile
-		echo $myline                                >> $outputfile
-	    fi
+		nccmp -c 1 -f -d -m $mydir/$myfile $refdir/$myfile >> $outputfile 2>&1
+	    fi 
 	fi
 	
+	sed -i 's/DIFFER :/   /g' $outputfile
 	echo -e "\t\t $myline"
 
     done < $rt_log
 
 done 
-
-
