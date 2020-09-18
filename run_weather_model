@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+set -x
+
 #: ./run_weather_model -h 
 #: TODO:  options for DISKNM to specify different baseline
 
@@ -21,7 +23,7 @@ fmsbranch='DEFAULT'
 conf_file='rt.conf'
 workdir=$scratch/WM_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 stophere=FALSE
-
+thisscript=$PWD #: dont change me
 
 #: get user-defined arguments 
 while getopts "a:u:d:c:f:m:qh" myopts ; do
@@ -84,7 +86,7 @@ workdir=$workdir/ufs-weather-model
 echo "CLONING" >> $log
 echo "git clone --recursive --branch $ufsbranch $ufs_model" >> $log
 echo "*************************************"                >> $log
-(git clone --recursive --ufsbranch $ufsbranch $ufs_model)   >> $log 2>&1
+(git clone --recursive --branch $ufsbranch $ufs_model)   >> $log 2>&1
 if [ $fmsbranch != 'DEFAULT' ] ; then
     (cd $workdir/FMS && git checkout $fmsbranch)            >> $log 2>&1
 fi
@@ -121,8 +123,8 @@ cp $workfile $workfile.ORIGINAL
 
 
 #: change account info for line number: bound1 < line number < bound2
-bound1=$( grep -m 1 -n 'MACHINE_ID = orion'$workfile | cut -d: -f1 )
-bound2=$( grep -m 1 -n 'MACHINE_ID = jet'  $workfile | cut -d: -f1 )
+bound1=$( grep -m 1 -n 'MACHINE_ID = orion' $workfile | cut -d: -f1 )
+bound2=$( grep -m 1 -n 'MACHINE_ID = jet'   $workfile | cut -d: -f1 )
 
 #: log
 echo   " OLD ACC INFO"                            >> $log
@@ -156,6 +158,14 @@ echo "NEW ACC INFO"                               >> $log
 echo "*************************************"      >> $log
 sed -n "${bound1},${bound2}p" $workfile           >> $log
 echo -e "*************************************\n" >> $log
+
+
+#: prep run_nccmp
+if [ -f $thisscript/run_nccmp ] ; then
+    cp $thisscript/run_nccmp $thisscript/run_nccmp_wm
+    sed -i "s:CHANGEMETESTDIR:$workdir/tests:" $thisscript/run_nccmp_wm
+    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.tel:" $thisscript/run_nccmp_wm
+fi
 
 
 #: stophere without running
@@ -195,3 +205,4 @@ done
 echo    "*************************************" >> $log
 echo    "*************************************" >> $log
 echo `env TZ=America/New_York date`  >> $log
+

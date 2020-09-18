@@ -20,6 +20,7 @@ fmsbranch='DEFAULT'
 conf_file='rt.conf'
 workdir=$scratch/S2S_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 stophere=FALSE
+thisscript=$PWD #: dont change me
 
 #: get user-defined arguments 
 while getopts "a:u:f:d:c:m:qh" myopts ; do
@@ -154,6 +155,14 @@ echo "NEW ACC INFO"                               >> $log
 echo "*************************************"      >> $log
 sed -n "${bound1},${bound2}p" $workfile           >> $log
 echo -e "*************************************\n" >> $log
+
+
+#: prep run_nccmp
+if [ -f $thisscript/run_nccmp ] ; then
+    cp $thisscript/run_nccmp $thisscript/run_nccmp_s2s
+    sed -i "s:CHANGEMETESTDIR:$workdir/tests:" $thisscript/run_nccmp_s2s
+    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.tel:" $thisscript/run_nccmp_s2s
+fi
 
 
 #: stophere without running
