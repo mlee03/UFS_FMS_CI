@@ -1,6 +1,6 @@
 #!/bin/bash
 
-module load fre/bronx-18
+#module load nccmp
 
 #: jobtype = all, meta, data
 jobtype=$1
@@ -16,8 +16,6 @@ testlist=( $(ls $testdir) )
 
 for rt_test in ${testlist[@]} ; do
     
-    echo $rt_test
-
     #: get rt_0##_fv3_ccpp_${rt_test}_prod.log
     rt_log=$( ls $rtdir/rt*.log | grep "${rt_test}_prod.log" | grep "rt" )
 
@@ -27,6 +25,8 @@ for rt_test in ${testlist[@]} ; do
 	continue
     fi
 
+    echo "$rt_test"
+    
     #: get baseline dir and my working dir
     refdir=$( grep "baseline dir" $rt_log | awk '{print $4}' )
     mydir=$(  grep "working dir"  $rt_log | awk '{print $4}' )   

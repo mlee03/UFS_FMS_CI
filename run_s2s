@@ -161,7 +161,7 @@ echo -e "*************************************\n" >> $log
 if [ -f $thisscript/run_nccmp ] ; then
     cp $thisscript/run_nccmp $thisscript/run_nccmp_s2s
     sed -i "s:CHANGEMETESTDIR:$workdir/tests:" $thisscript/run_nccmp_s2s
-    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.tel:" $thisscript/run_nccmp_s2s
+    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.intel:" $thisscript/run_nccmp_s2s
 fi
 
 
