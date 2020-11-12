@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#: ./run_weather_model -h 
+#: ./run_ufs_model -h 
 #: TODO:  options for DISKNM to specify different baseline
 
 
@@ -61,8 +61,8 @@ ptmp="  PTMP=$workdir/stmp2"
 #: LOG
 log=$workdir/LOG
 mkdir -p $workdir && cd $workdir
-echo "  work in progress in directory $workdir"
-echo "  LOG file generated in $workdir"
+echo -e "  work in progress in directory \n\t $workdir"
+echo -e "  LOG file generated in \n\t $workdir"
 
 
 #: LOG
@@ -83,7 +83,7 @@ workdir=$workdir/ufs-weather-model
 echo "CLONING" >> $log
 echo "git clone --recursive --branch $ufsbranch $ufs_model" >> $log
 echo "*************************************"                >> $log
-(git clone --recursive --branch $ufsbranch $ufs_model)   >> $log 2>&1
+(git clone --recursive --branch $ufsbranch $ufs_model)      >> $log 2>&1
 if [ $fmsbranch != 'DEFAULT' ] ; then
     (cd $workdir/FMS && git checkout $fmsbranch)            >> $log 2>&1
 fi
@@ -159,9 +159,10 @@ echo -e "*************************************\n" >> $log
 
 #: prep run_nccmp
 if [ -f $thisscript/run_nccmp ] ; then
-    cp $thisscript/run_nccmp $thisscript/run_nccmp_wm
-    sed -i "s:CHANGEMETESTDIR:$workdir/tests:" $thisscript/run_nccmp_wm
-    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.intel:" $thisscript/run_nccmp_wm
+    cp $thisscript/run_nccmp $thisscript/run_nccmp.runme
+    sed -i "s:CHANGEMETESTDIR:$workdir/tests:" $thisscript/run_nccmp.runme
+    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.intel:" $thisscript/run_nccmp.runme
+    cp $thisscript/run_nccmp.runme $workdir/tests/orion.intel/run_nccmp
 fi
 
 
