@@ -17,26 +17,21 @@ disknm=''
 ufs_model='https://github.com/ufs-community/ufs-weather-model.git'
 ufsbranch='develop'
 fmsbranch='DEFAULT'
-conf_file='rt.conf'
-workdir=$scratch/WM_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
-stophere=FALSE
+topdir=$scratch/WM_$(env TZ=America/New_York date +"%m_%d_%y_%H.%M.%S")
 thisscript=$PWD #: dont change me
 
 #: get user-defined arguments 
 while getopts "a:u:d:c:f:m:qh" myopts ; do
     case ${myopts} in 
 	a) ufs_model=${OPTARG}   ;;
-	d) workdir=${OPTARG}     ;;
-	c) conf_file=${OPTARG}   ;;
+	d) topdir=${OPTARG}      ;;
 	f) fmsbranch=${OPTARG}   ;; 
 	m) log_message=${OPTARG} ;;
-	q) stophere=TRUE         ;;
 	u) ufsbranch=${OPTARG}   ;;
 	h)
 	    echo -e "\n USAGE"
 	    echo    " ./run_rts.sh -d directory -a repo_address -b ufsbranch -c conf_file -m message"
 	    echo    " -d directory:   user-specified work directory" 
-	    echo    " -c conf_file:   rt.conf"
 	    echo    " -a address:     UFS repo address to checkout from GitHub"
 	    echo    " -u ufsbranch:   UFS branch/tag to checkout from GitHub"
 	    echo    " -f fmsbranch:   FMS branch/tag to switch"
@@ -45,24 +40,24 @@ while getopts "a:u:d:c:f:m:qh" myopts ; do
 	    echo    "      REPO      $ufs_model"	    
 	    echo    "      UFSBRANCH $ufsbranch"
 	    echo    "      FMSBRANCH DEFAULT"
-	    echo    "      WORKDIR   $workdir"
-	    echo    "      RT.SH     $workdir/ufs-weather-model/tests/rt.sh"
-	    echo -e "      RT.CONF   $workdir/ufs-weather-model/tests/$conf_file\n"
+	    echo    "      TOPDIR    $topdir"
+	    echo    "      RT.SH     $topdir/ufs-weather-model/tests/rt.sh"
+	    echo -e "      RT.CONF   $topdir/ufs-weather-model/tests/rt.conf \n"
 	    exit ;;
     esac
 done
 
 
 #: change stmp and ptmp location to be inside workdir
-stmp="  STMP=$workdir/stmp4"
-ptmp="  PTMP=$workdir/stmp2"
+stmp="  STMP=$topdir/stmp4"
+ptmp="  PTMP=$topdir/stmp2"
 
 
 #: LOG
-log=$workdir/LOG
-mkdir -p $workdir && cd $workdir
-echo -e "  work in progress in directory \n\t $workdir"
-echo -e "  LOG file generated in \n\t $workdir"
+log=$topdir/LOG
+mkdir -p $topdir && cd $topdir
+echo -e "  work in progress in directory \n\t $topdir"
+echo -e "  LOG file generated in \n\t $topdir"
 
 
 #: LOG
@@ -75,112 +70,94 @@ echo    "FMS BRANCH      $fmsbranch"      >> $log
 echo -e "MESSAGE         $log_message\n"  >> $log
 
 
-#: change workdir
-workdir=$workdir/ufs-weather-model
+#: set workdir and bcnhmarkdir
+baselinedir=$topdir/benchmark
+workdir=$topdir/ufs-weather-model
 
 
+#: benchmark branch set to develop
+echo "CLONING BENCHMARK" >> $log
+echo "git clone --recursive --branch develop $ufs_model benchmark" >> $log
+echo "*************************************"                  >> $log
+(git clone --recursive --branch develop $ufs_model benchmark) >> $log 2>&1
+echo -e "*************************************\n"             >> $log
 #: clone UFS weather model
 echo "CLONING" >> $log
-echo "git clone --recursive --branch $ufsbranch $ufs_model" >> $log
-echo "*************************************"                >> $log
-(git clone --recursive --branch $ufsbranch $ufs_model)      >> $log 2>&1
+echo "git clone --recursive --branch $ufsbranch $ufs_model"      >> $log
+echo "*************************************"                     >> $log
+(git clone --recursive --branch $ufsbranch $ufs_model)           >> $log 2>&1
 if [ $fmsbranch != 'DEFAULT' ] ; then
-    (cd $workdir/FMS && git checkout $fmsbranch)            >> $log 2>&1
-fi
-echo -e "*************************************\n"           >> $log
-
-
-#: change workdir
-workdir=$workdir/tests
-cd $workdir
-
-
-#: check to see if the workflow script exists
-if [ -f $workdir/rt.sh ] ; then
-    workfile=$workdir/rt.sh
-    echo "rt.sh:   $workfile" >> $log
-else
-    echo "rt.sh:  CANNOT FIND rt.sh in $workdir.  GOODBYE!" >> $log
-    exit
+    (cd $workdir/FMS && git checkout $fmsbranch && cd $workdir ) >> $log 2>&1
 fi
 
 
-#: check to see if *.conf file exists 
-if [ -f $workdir/$conf_file ] ; then    
-    conf_file=$workdir/$conf_file
-    echo -e "rt.conf: $conf_file\n" >> $log
-else
-    echo "rt.conf:  CANNOT FIND $conf_file in $workdir.  GOODBYE!" >> $log
-    exit
-fi
+#: script to compare output files
+cp $thisscript/check_results.sh $topdir/check_results.sh
+sed -i "s:CHANGEME_WORKDIR:$workdir/tests:" $topdir/check_results.sh
+sed -i "s:CHANGEME_BASELINE:$baselinedir/tests:" $topdir/check_results.sh
+chmod +x $topdir/check_results.sh
 
 
-#: edit rt.sh
-cp $workfile $workfile.ORIGINAL
+for mydir in "$workdir/tests" "$baselinedir/tests" ; do
 
+    echo "" >> $log
 
-#: change account info for line number: bound1 < line number < bound2
-bound1=$( grep -m 1 -n 'MACHINE_ID = orion' $workfile | cut -d: -f1 )
-bound2=$( grep -m 1 -n 'MACHINE_ID = jet'   $workfile | cut -d: -f1 )
+    #: check to see if the workflow script exists
+    if [ -f $mydir/rt.sh ] ; then
+	workfile=$mydir/rt.sh
+	echo "rt.sh:   $workfile" >> $log
+    else
+	echo "rt.sh:  CANNOT FIND rt.sh in $mydir.  GOODBYE!" >> $log
+	exit
+    fi
 
-#: log
-echo   " OLD ACC INFO"                            >> $log
-echo    "*************************************"   >> $log
-sed -n  "${bound1},${bound2}p" $workfile          >> $log
-echo -e "*************************************\n" >> $log
+    #: check to see if *.conf file exists 
+    if [ -f $mydir/rt.conf ] ; then    
+	conf_file=$mydir/rt.conf
+	echo -e "rt.conf: $conf_file\n" >> $log
+    else
+	echo "rt.conf:  CANNOT FIND $conf_file in $mydir.  GOODBYE!" >> $log
+	exit
+    fi
 
-#: change QUEUE
-changeme=$( sed -n "${bound1},${bound2}p"    $workfile | grep -m 1 "QUEUE" )
-sed -i "$bound1,$bound2 s/$changeme/$queue/" $workfile
+    #: edit rt.sh
+    cp $workfile $workfile.ORIGINAL
+    
+    #: change account info for line number: bound1 < line number < bound2
+    bound1=$( grep -m 1 -n 'MACHINE_ID = orion' $workfile | cut -d: -f1 )
+    bound2=$( grep -m 1 -n 'MACHINE_ID = jet'   $workfile | cut -d: -f1 )
 
-#: change COMPILE_QUEUE
-changeme=$( sed -n "${bound1},${bound2}p"            $workfile | grep "COMPILE_QUEUE" )
-sed -i "$bound1,$bound2 s/$changeme/$compile_queue/" $workfile
-
-#: change ACCNR
-changeme=$( sed -n "${bound1},${bound2}p"    $workfile | grep "ACCNR" )
-sed -i "$bound1,$bound2 s/$changeme/$accnr/" $workfile
-
-#: change STMP
-changeme=$( sed -n "${bound1},${bound2}p"   $workfile | grep "STMP" )
-sed -i "$bound1,$bound2 s:$changeme:$stmp:" $workfile
-
-#: change PTMP
-changeme=$( sed -n "${bound1},${bound2}p"   $workfile | grep "PTMP" )
-sed -i "$bound1,$bound2 s:$changeme:$ptmp:" $workfile
-
-
-#: LOG
-echo "NEW ACC INFO"                               >> $log
-echo "*************************************"      >> $log
-sed -n "${bound1},${bound2}p" $workfile           >> $log
-echo -e "*************************************\n" >> $log
-
-
-#: prep run_nccmp
-if [ -f $thisscript/run_nccmp ] ; then
-    cp $thisscript/run_nccmp $thisscript/run_nccmp.runme
-    sed -i "s:CHANGEMETESTDIR:$workdir/tests:" $thisscript/run_nccmp.runme
-    sed -i "s:CHANGEMERTDIR:$workdir/log_orion.intel:" $thisscript/run_nccmp.runme
-    cp $thisscript/run_nccmp.runme $workdir/tests/orion.intel/run_nccmp
-fi
-
-
-#: stophere without running
-if [ $stophere == 'TRUE' ] ; then
+    #: change QUEUE
+    changeme=$( sed -n "${bound1},${bound2}p"    $workfile | grep -m 1 "QUEUE" )
+    sed -i "$bound1,$bound2 s/$changeme/$queue/" $workfile
+    
+    #: change COMPILE_QUEUE
+    changeme=$( sed -n "${bound1},${bound2}p"            $workfile | grep "COMPILE_QUEUE" )
+    sed -i "$bound1,$bound2 s/$changeme/$compile_queue/" $workfile
+    
+    #: change ACCNR
+    changeme=$( sed -n "${bound1},${bound2}p"    $workfile | grep "ACCNR" )
+    sed -i "$bound1,$bound2 s/$changeme/$accnr/" $workfile
+    
+    #: change STMP
+    changeme=$( sed -n "${bound1},${bound2}p"   $workfile | grep "STMP" )
+    sed -i "$bound1,$bound2 s:$changeme:$stmp:" $workfile
+    
+    #: change PTMP
+    changeme=$( sed -n "${bound1},${bound2}p"   $workfile | grep "PTMP" )
+    sed -i "$bound1,$bound2 s:$changeme:$ptmp:" $workfile
+    
+    #: LOG
+    #echo "NEW ACC INFO"                               >> $log
+    #echo "*************************************"      >> $log
+    #sed -n "${bound1},${bound2}p" $workfile           >> $log
+    #echo -e "*************************************"   >> $log
+    
+    #: stophere without running
     echo "EXITING.  TO RUN REGRESSION TESTS"
-    echo "$workfile -s -l $conf_file"
-    exit
-fi
-
-
-#: run regression tests
-echo    "RUNNING $workfile"                                >> $log
-echo    "SEE     $workdir/log_hera.intel for job progress" >> $log
-echo    "*************************************"            >> $log
-echo -e "*************************************\n"          >> $log
-($workfile -s -l $conf_file)                               >> $log 2>&1
-
+    echo "nohup $workfile -s -k -l $conf_file &"
+    
+done
 
 #: summarize results
 echo    "*************************************" >> $log
